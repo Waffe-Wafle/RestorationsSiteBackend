@@ -4,6 +4,14 @@ from copy import deepcopy
 from Site.settings import ROUND
 
 
+given = 1200
+total = 21000000
+
+
+def count_percent(val1, val2):
+    return round(val1/val2*100, ROUND)
+
+
 MOCK_RESTORATIONS = [
     {
         'id': 0,
@@ -164,6 +172,26 @@ MOCK_DONORS = [
         'restoration_sum': 100000
     }
 ]
+MOCK_DRAFT = {
+    'basket': {
+        'code': 'pDtnmDfgOoij',
+        'given_sum': given
+    },
+    'donations': [
+        {'restore_id': 3,
+         'restore_name': 'Спасо-Преображенская церковь в Костомарово',
+         'worksDonations': [{
+             'work_id': 2,
+             'work':    'Реставрация иконостаса',
+             'given_sum': given,
+             'total_sum': total,
+             'percent': count_percent(given, total)
+            }]
+        }
+    ]
+}
+DRAFT_SIZE = len(MOCK_DRAFT['donations'])
+
 
 # Technical:
 # For lab1 only:
@@ -179,10 +207,6 @@ def filter_restorations(restorations, search):
 
 
 # For all:
-def count_percent(val1, val2):
-    return round(val1/val2*100, ROUND)
-
-
 def get_restoration_data(restoration, works=False):
     if not restoration and works:
         raise Http404()
@@ -217,7 +241,8 @@ def get_donater_data(donation):
 # Views:
 def info(request: HttpRequest):
     search = request.POST.get('search')
-    return render(request, 'Restorations/info.html', {'search_text': search if search else ''})
+    return render(request, 'Restorations/info.html', {'search_text': search if search else '',
+                                                      'basket_size': DRAFT_SIZE})
 
 
 def catalog(request: HttpRequest):
@@ -232,7 +257,8 @@ def catalog(request: HttpRequest):
     restoration_list = [get_restoration_data(restoration) for restoration in restorations_l]
 
     return render(request, 'Restorations/catalog.html', {'restore_list': restoration_list,
-                                                         'search_text': search if search else ''})
+                                                         'search_text': search if search else '',
+                                                         'basket_size': DRAFT_SIZE})
 
 
 def restoration(request: HttpRequest, restore_id):
@@ -246,4 +272,12 @@ def restoration(request: HttpRequest, restore_id):
     donations = [get_donater_data(donation) for donation in deepcopy(MOCK_DONORS)]
     return render(request, 'Restorations/card.html', {'restoration': restoration,
                                                       'donors': donations,
-                                                      'search_text': search if search else ''})
+                                                      'search_text': search if search else '',
+                                                      'basket_size': DRAFT_SIZE})
+
+
+def basket(request: HttpRequest):
+    return render(request, 'Restorations/basket.html',
+                  {'basket': MOCK_DRAFT['basket'],
+                   'donations': MOCK_DRAFT['donations'],
+                   'basket_size': DRAFT_SIZE})
